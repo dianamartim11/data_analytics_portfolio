@@ -1,68 +1,61 @@
 """
 analyse.py  —  STARTER (you finish the TODOs)
 ---------------------------------------------
-Answers the business questions from the CLEANED data and saves charts.
+Merges the cleaned tables and answers the business questions, saving charts
+to 03_python/figures/.
 
 Run from the project root (after clean.py):
     python3 03_python/analyse.py
-
-Saves charts into: 03_python/figures/
 """
 
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-CLEAN = "data/processed/online_orders_clean.csv"
+P = "data/processed"
 FIG = "03_python/figures"
 
-df = pd.read_csv(CLEAN)
+orders   = pd.read_csv(f"{P}/orders_clean.csv", parse_dates=["order_date"])
+products = pd.read_csv(f"{P}/products_clean.csv")
+customers= pd.read_csv(f"{P}/customers_clean.csv")
+returns  = pd.read_csv(f"{P}/returns_clean.csv")
 
-# Revenue per order ----------------------------------------------------------
+# --- build the analysis table: orders + product + customer info ------------
+df = orders.merge(products, on="product_id", how="left") \
+           .merge(customers[["customer_id","county","gender","age"]],
+                  on="customer_id", how="left")
 df["revenue"] = df["quantity"] * df["unit_price"]
+df["profit"]  = (df["unit_price"] - df["cost_price"]) * df["quantity"]
+df["order_month"] = df["order_date"].dt.to_period("M").astype(str)
 
-# Q1: headline numbers -------------------------------------------------------
-print("Total orders :", len(df))
-print("Total revenue: KES", round(df["revenue"].sum(), 2))
+# --- headline numbers ------------------------------------------------------
+print("Orders        :", len(df))
+print("Total revenue : KES", round(df["revenue"].sum()))
+print("Total profit  : KES", round(df["profit"].sum()))
 
-# Q2: revenue by category ----------------------------------------------------
-by_cat = df.groupby("category")["revenue"].sum().sort_values(ascending=False)
-print("\nRevenue by category:\n", by_cat)
+# --- revenue & profit by category ------------------------------------------
+by_cat = df.groupby("category").agg(revenue=("revenue","sum"),
+                                    profit=("profit","sum")).sort_values("revenue", ascending=False)
+print("\nBy category:\n", by_cat)
 
-# TODO Q3: revenue by county (groupby 'county') -> print top 5
-# TODO Q4: orders per payment_method (value_counts or groupby size) -> print
+# TODO: revenue by county (merge already gives county) -> print top 5
+# TODO: orders by channel and by payment_method -> print
+# TODO: return rate = number of returned orders / total orders
+#       (merge returns on order_id, count non-null return_id)
 
-# Chart 1: revenue by category (bar) -----------------------------------------
-by_cat.plot(kind="bar", title="Revenue by Category", ylabel="Revenue (KES)")
-plt.tight_layout()
-plt.savefig(f"{FIG}/revenue_by_category.png")
-plt.close()
-print(f"\nSaved {FIG}/revenue_by_category.png")
+# --- Chart 1: revenue by category (bar) ------------------------------------
+by_cat["revenue"].plot(kind="bar", title="Revenue by Category", ylabel="KES")
+plt.tight_layout(); plt.savefig(f"{FIG}/revenue_by_category.png"); plt.close()
 
-# TODO Chart 2: a histogram of ratings OR a line of revenue over time
-# TODO Chart 3: a correlation heatmap
-#   corr = df[["unit_price", "quantity", "rating", "revenue"]].corr()
-#   sns.heatmap(corr, annot=True, cmap="coolwarm")
-#   plt.savefig(f"{FIG}/correlation_heatmap.png")
+# --- Chart 2: revenue over time (line) -------------------------------------
+monthly = df.groupby("order_month")["revenue"].sum()
+monthly.plot(kind="line", marker="o", title="Revenue by Month", ylabel="KES")
+plt.tight_layout(); plt.savefig(f"{FIG}/revenue_by_month.png"); plt.close()
 
-# ---------------------------------------------------------------------------
-# Pick ONE statistical step and complete it:
-# ---------------------------------------------------------------------------
+# TODO Chart 3: histogram of order ratings  (df["rating"].plot(kind="hist"))
+# TODO Chart 4: box plot of unit_price by category (shows outliers)
+#       sns.boxplot(data=df, x="category", y="unit_price")
+# TODO Chart 5: correlation heatmap of
+#       df[["quantity","unit_price","discount","rating","revenue","age"]].corr()
 
-# OPTION A — t-test: do Nairobi and Mombasa rate differently?
-# from scipy import stats
-# nbo = df[df["county"] == "Nairobi"]["rating"].dropna()
-# msa = df[df["county"] == "Mombasa"]["rating"].dropna()
-# t, p = stats.ttest_ind(nbo, msa)
-# print(f"\nt-test Nairobi vs Mombasa ratings: p = {p:.4f}")
-# print("Difference is", "significant" if p < 0.05 else "NOT significant", "(p<0.05?)")
-
-# OPTION B — regression: does price predict rating?
-# from sklearn.linear_model import LinearRegression
-# d = df.dropna(subset=["rating"])
-# X = d[["unit_price"]]; y = d["rating"]
-# model = LinearRegression().fit(X, y)
-# print(f"\nRegression: rating = {model.coef_[0]:.5f} * price + {model.intercept_:.2f}")
-# print("R^2 =", round(model.score(X, y), 3))
-
-print("\nDone. Now write up what these numbers mean in reports/findings.md")
+print(f"\nCharts saved to {FIG}/. Deeper stats live in ../04_statistics/.")

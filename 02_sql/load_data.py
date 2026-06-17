@@ -1,17 +1,18 @@
 """
 load_data.py
 ------------
-Creates a SQLite database (dukaonline.db), builds the `orders` table from
-schema.sql, and loads your CLEANED data into it.
+Builds dukaonline.db (SQLite), creates all five tables from schema.sql, and loads
+your CLEANED data from data/processed/.
 
-Run from the project root:
+Run from the project root (AFTER you finish the Python cleaning in Stage 3):
     python3 02_sql/load_data.py
 
-Then explore with:
+Then explore:
     sqlite3 dukaonline.db
     sqlite> .read 02_sql/queries.sql
+    sqlite> .quit
 
-This uses Python's built-in sqlite3 module — nothing to install.
+Uses Python's built-in sqlite3 — nothing to install.
 """
 
 import sqlite3
@@ -20,42 +21,53 @@ import os
 
 DB = "dukaonline.db"
 SCHEMA = "02_sql/schema.sql"
-DATA = "data/processed/online_orders_clean.csv"
 
-if not os.path.exists(DATA):
+# table name -> (clean csv path, column order matching schema.sql)
+TABLES = {
+    "customers": ("data/processed/customers_clean.csv",
+                  ["customer_id","name","phone","county","gender","age","signup_date"]),
+    "products":  ("data/processed/products_clean.csv",
+                  ["product_id","product_name","category","cost_price","list_price"]),
+    "orders":    ("data/processed/orders_clean.csv",
+                  ["order_id","customer_id","product_id","order_date","quantity",
+                   "unit_price","discount","payment_method","channel","rating"]),
+    "returns":   ("data/processed/returns_clean.csv",
+                  ["return_id","order_id","return_date","reason"]),
+    "ab_test":   ("data/processed/ab_test_clean.csv",
+                  ["customer_id","variant","exposed_date","converted"]),
+}
+
+# columns that should load as numbers (everything else stays text)
+NUMERIC = {"age","quantity","unit_price","discount","rating","cost_price",
+           "list_price","converted"}
+
+def cast(col, val):
+    if val == "" or val is None:
+        return None
+    if col in NUMERIC:
+        return float(val) if ("." in val) else int(val)
+    return val
+
+missing = [p for (p, _) in TABLES.values() if not os.path.exists(p)]
+if missing:
     raise SystemExit(
-        f"Could not find {DATA}.\n"
-        "Run your Python cleaning script (Stage 3) first so the clean file exists."
+        "These cleaned files don't exist yet:\n  " + "\n  ".join(missing) +
+        "\n\nFinish the Python cleaning (Stage 3) first so data/processed/ is populated."
     )
 
 conn = sqlite3.connect(DB)
 cur = conn.cursor()
-
-# 1. Build the table from schema.sql
 with open(SCHEMA) as f:
     cur.executescript(f.read())
 
-# 2. Load the cleaned CSV
-with open(DATA, newline="") as f:
-    reader = csv.DictReader(f)
-    rows = [
-        (
-            r["order_id"], r["order_date"], r["customer_name"], r["phone"],
-            r["county"], r["product"], r["category"],
-            int(r["quantity"]) if r["quantity"] else None,
-            float(r["unit_price"]) if r["unit_price"] else None,
-            r["payment_method"],
-            int(r["rating"]) if r["rating"] else None,
-        )
-        for r in reader
-    ]
+for table, (path, cols) in TABLES.items():
+    with open(path, newline="") as f:
+        reader = csv.DictReader(f)
+        rows = [tuple(cast(c, r.get(c, "")) for c in cols) for r in reader]
+    placeholders = ",".join("?" * len(cols))
+    cur.executemany(f"INSERT OR REPLACE INTO {table} VALUES ({placeholders})", rows)
+    print(f"  {table:<10} {len(rows)} rows")
 
-cur.executemany(
-    "INSERT OR REPLACE INTO orders VALUES (?,?,?,?,?,?,?,?,?,?,?)", rows
-)
 conn.commit()
-
-count = cur.execute("SELECT COUNT(*) FROM orders").fetchone()[0]
-print(f"Loaded {count} rows into {DB} (table: orders).")
-print("Open it with:  sqlite3 dukaonline.db")
+print(f"\nLoaded everything into {DB}. Open it with:  sqlite3 dukaonline.db")
 conn.close()

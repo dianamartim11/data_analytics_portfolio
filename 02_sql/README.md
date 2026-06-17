@@ -1,59 +1,58 @@
-# Stage 2 — Model the data as a database (SQL)
+# Stage 2 — SQL: query a real (multi-table) database
 
-Now you will load your cleaned data into a real database table and answer
-questions with SQL.
+This stage proves you can write SQL — the #1 skill employers test data analysts on.
+You will load the five cleaned tables into a database and answer questions that
+require **joins, grouping, dates, subqueries, CTEs, and window functions**.
 
-> ⚠️ Do this stage **after** (or alongside) the Python cleaning in Stage 3, because
-> the database should hold the *clean* data — `data/processed/online_orders_clean.csv`.
-> If you haven't cleaned yet, you can load the raw file to practise, but redo it with
-> the clean file before you submit.
+> ⚠️ Do this **after** the Python cleaning (Stage 3) so the database holds clean
+> data. The loader expects the cleaned files in `data/processed/`.
 
-## Easiest path: SQLite via Python (nothing to install)
+## Easiest path — SQLite via Python (nothing to install)
 
-You already have Python. SQLite is built in. From the project root:
-
+From the project root:
 ```bash
-# 1. Create the empty table from the schema
-sqlite3 dukaonline.db < 02_sql/schema.sql      # if you have the sqlite3 command
-
-# OR do everything in one short Python script (works everywhere):
-python3 02_sql/load_data.py
-```
-
-A ready-to-run loader, `load_data.py`, is provided in this folder — it creates the
-database, applies `schema.sql`, and imports `data/processed/online_orders_clean.csv`.
-
-Then explore:
-```bash
-sqlite3 dukaonline.db        # opens an interactive SQL prompt
-sqlite> .read 02_sql/queries.sql
+python3 02_sql/load_data.py      # builds dukaonline.db with all 5 tables
+sqlite3 dukaonline.db            # opens an interactive SQL prompt
+sqlite> .headers on
+sqlite> .mode column
+sqlite> .read 02_sql/queries.sql # runs all your queries
 sqlite> .quit
 ```
-
-> Prefer **MySQL Workbench** or **pgAdmin**? That's fine too — create a database,
-> run `schema.sql`, import the CSV, then run `queries.sql`. The SQL is standard.
+> No `sqlite3` command? Install it (`sudo apt install sqlite3`, or on Windows
+> download from sqlite.org), **or** run queries straight from Python with
+> `pandas.read_sql(query, sqlite3.connect("dukaonline.db"))`.
+>
+> Prefer **MySQL Workbench** / **pgAdmin**? Also fine — create a database, run
+> `schema.sql`, import the cleaned CSVs, then run `queries.sql`. The SQL is standard
+> (except `substr(...)` for months — use `DATE_FORMAT`/`TO_CHAR` there instead).
 
 ## Your tasks
-1. Create the `orders` table from [`schema.sql`](schema.sql).
-2. Load the **cleaned** CSV into it.
-3. Complete every query in [`queries.sql`](queries.sql) (Q2–Q6).
-4. Below, paste each query's **result** (numbers or a screenshot) and explain in one
-   sentence what it tells the business.
+Open [`queries.sql`](queries.sql) and complete **Q2, Q4, Q6–Q15**.
+They are grouped by difficulty:
+1. **Basics** — SELECT / WHERE / ORDER BY
+2. **Grouping** — GROUP BY / HAVING / aggregates
+3. **Joins** — INNER and LEFT joins across tables
+4. **CASE / dates / subqueries / CTEs**
+5. **Window functions** — RANK, running totals, LAG
 
-## My results & explanations
-*(fill this in)*
+## What to hand in
+- A completed `queries.sql`
+- The **result** of each query pasted below (numbers or a 📷 screenshot)
+- One sentence per query on what it tells the business
 
-**Q2 — Revenue by category:**
-> result + one-sentence explanation
+## My results
+*(fill in — one block per query)*
 
-**Q3 — Top 5 counties:**
->
-
-**Q4 — Payment methods:**
->
-
-**Q5 — Average rating per category:**
->
-
-**Q6 — Best-selling product:**
->
+**Q2 — Top 10 orders by value:** …
+**Q4 — Avg rating per channel (≥50 orders):** …
+**Q5 — Revenue by category:** …
+**Q6 — Profit by category:** …
+**Q7 — Revenue by county:** …
+**Q8 — Returned vs not returned:** …
+**Q9 — Orders per price tier:** …
+**Q10 — Revenue by month:** …
+**Q11 — Above-average customers:** …
+**Q12 — Top product per category (CTE):** …
+**Q13 — Product rank within category (window):** …
+**Q14 — Running monthly revenue (window):** …
+**Q15 — Month-over-month change (LAG):** …

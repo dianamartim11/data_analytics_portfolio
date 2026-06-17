@@ -7,50 +7,53 @@
 
 # DukaOnline — Data Analytics Portfolio Project
 
-A full end-to-end data analysis of an online store's order data, taking it from
-a messy raw spreadsheet all the way to a Power BI dashboard and business
-recommendations.
+An **end-to-end analysis** of an online store's business data — taking five messy
+raw tables all the way from cleaning, through SQL, Python, statistics and modelling,
+to an interactive Power BI dashboard and business recommendations.
 
-> 📌 **New here? Read [`ASSIGNMENT.md`](ASSIGNMENT.md) first** — it explains the
-> whole project. Track your progress with [`RUBRIC.md`](RUBRIC.md).
+> 📌 **New here?** Start with [`ASSIGNMENT.md`](ASSIGNMENT.md). Track every skill in
+> [`SKILLS_CHECKLIST.md`](SKILLS_CHECKLIST.md). Understand the data in
+> [`data/DATA_DICTIONARY.md`](data/DATA_DICTIONARY.md).
 
 ---
 
-## 🛠️ Tools used
-Excel · SQL (SQLite) · Python (pandas, matplotlib, seaborn, scikit-learn, scipy) ·
-Power BI · Git & GitHub
+## 🛠️ Tools & skills demonstrated
+**Excel** (lookups, pivots, dashboard) · **SQL** (joins, CTEs, window functions) ·
+**Python** (pandas, matplotlib, seaborn, scikit-learn, scipy, Jupyter) ·
+**Statistics** (A/B testing, regression, time series, RFM segmentation) ·
+**Power BI** (Power Query, DAX, dashboards) · **Git & GitHub**
 
 ## 🔁 The pipeline
 ```
-Raw messy CSV  →  Excel exploration  →  SQL database  →  Python cleaning & analysis  →  Power BI dashboard  →  Report
+5 messy tables → Excel → SQL database → Python cleaning & EDA → Statistics & models → Power BI → Report
 ```
 
 ## 📂 Repository map
 | Folder | What's inside |
 |---|---|
-| [`data/raw/`](data/raw/) | The original messy dataset |
-| [`data/processed/`](data/processed/) | The cleaned dataset (output of the Python stage) |
-| [`01_excel/`](01_excel/) | Excel exploration & cleaning notes |
-| [`02_sql/`](02_sql/) | Database schema and analysis queries |
-| [`03_python/`](03_python/) | Cleaning + analysis scripts and charts |
-| [`04_powerbi/`](04_powerbi/) | Power BI dashboard and screenshot |
-| [`reports/`](reports/) | Final written findings |
+| [`data/`](data/) | Raw tables, cleaned outputs, and the data dictionary |
+| [`01_excel/`](01_excel/) | Excel exploration, formulas, lookups, dashboard |
+| [`02_sql/`](02_sql/) | Schema + queries (basics → window functions) |
+| [`03_python/`](03_python/) | Cleaning, EDA, charts, Jupyter notebook |
+| [`04_statistics/`](04_statistics/) | Outliers, A/B test, regression, time series, RFM |
+| [`05_powerbi/`](05_powerbi/) | DAX measures + interactive dashboard |
+| [`reports/`](reports/) | Final written findings + ethics note |
 
 ---
 
 ## 🔑 Key findings
-*>> PLACEHOLDER — fill this in after you finish the analysis. 3–5 bullet points, e.g.: <<*
-- Top revenue category: **>> ??? <<**
+*>> PLACEHOLDER — fill in after the analysis. Examples: <<*
+- Top category by **revenue**: **>> ??? <<** — but top by **profit**: **>> ??? <<**
 - Best market (county): **>> ??? <<**
-- Most popular payment method: **>> ??? <<**
-- Price vs rating relationship: **>> ??? <<**
+- Sales trend: **>> growing/seasonal? <<**
+- A/B test: variant **>> A/B <<** won, conversion **>> __% vs __% <<** (p = **>> __ <<**)
 
 ## 📊 Dashboard preview
-*>> PLACEHOLDER — add your Power BI screenshot here, e.g.: <<*
-<!-- ![Dashboard](04_powerbi/dashboard.png) -->
+*>> PLACEHOLDER — add your Power BI screenshot: <<*
+<!-- ![Dashboard](05_powerbi/dashboard.png) -->
 
-## ✍️ Recommendations
-See the full write-up in [`reports/findings.md`](reports/findings.md).
+## ✍️ Full write-up
+See [`reports/findings.md`](reports/findings.md).
 
 ---
 

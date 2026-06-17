@@ -19,5 +19,6 @@ Thumbs.db
 *.db
 *.sqlite
 
-# NOTE: we DO commit data/processed/online_orders_clean.csv on purpose,
-# because Power BI and the report depend on it. Keep it tracked.
+# You GENERATE data/processed/*_clean.csv by running 03_python/clean.py, and the
+# chart PNGs by running the analysis scripts. Commit them once they exist so your
+# Power BI, SQL loader and report can use them (they are not ignored).

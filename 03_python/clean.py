@@ -1,85 +1,105 @@
 """
 clean.py  —  STARTER (you finish the TODOs)
 -------------------------------------------
-Reads the messy raw orders and writes a clean version that every later stage
-(SQL, Power BI, the report) will use.
+Cleans ALL FIVE raw tables and writes tidy versions to data/processed/.
+Every later stage (SQL, statistics, Power BI, the report) uses these clean files.
 
 Run from the project root:
     python3 03_python/clean.py
 
-When you are done it should create:
-    data/processed/online_orders_clean.csv
+Produces:
+    data/processed/customers_clean.csv
+    data/processed/products_clean.csv
+    data/processed/orders_clean.csv
+    data/processed/returns_clean.csv
+    data/processed/ab_test_clean.csv
 
-Look back at these class scripts for help — you have done all of this before:
-  - fixamountandparse.py                  (currency text -> number, date parsing)
-  - normalisephonedropduplicatesandsave.py (phone formats, drop_duplicates)
-  - standardisetheservice.py              (fix inconsistent category spellings)
-  - prepare_for_powerbi.py                (the whole pipeline as one example)
+You have done every technique below in the class repo — reuse those ideas
+(fixamountandparse.py, normalisephonedropduplicatesandsave.py, standardisetheservice.py).
 """
 
+import re
 import pandas as pd
 
-RAW = "data/raw/online_orders_messy.csv"
-OUT = "data/processed/online_orders_clean.csv"
+RAW = "data/raw"
+OUT = "data/processed"
 
-# 1. Load -------------------------------------------------------------------
-df = pd.read_csv(RAW)
-print("Loaded:", df.shape)
-print(df.head())
+# --------------------------------------------------------------------------
+# small reusable helpers
+# --------------------------------------------------------------------------
+def fix_phone(p):
+    """Return a phone in one consistent format: +2547XXXXXXXX."""
+    digits = re.sub(r"\D", "", str(p))          # keep digits only
+    if digits.startswith("0"):
+        digits = "254" + digits[1:]
+    elif digits.startswith("7"):
+        digits = "254" + digits
+    return "+" + digits
 
-# 2. Trim spaces and fix capitalisation in text columns ----------------------
-df["customer_name"] = df["customer_name"].str.strip().str.title()
-# TODO: do the same kind of cleanup for county, category, payment_method
-#       (strip spaces first, then fix capitalisation/spelling below)
+def to_number(series):
+    """'KES 3,500' / '3,500' -> 3500.0"""
+    return pd.to_numeric(
+        series.astype(str)
+              .str.replace("KES", "", case=False)
+              .str.replace(",", "")
+              .str.strip(),
+        errors="coerce",
+    )
 
-# 3. Fix county spellings ----------------------------------------------------
-# TODO: map nairobi/NAIROBI/' Nairobi' -> 'Nairobi', Mombassa -> 'Mombasa', etc.
-# Hint:
-# county_fixes = {"nairobi": "Nairobi", "mombassa": "Mombasa", ...}
-# df["county"] = df["county"].str.strip().str.title().replace(county_fixes)
+def parse_date(series):
+    """Handle the 3 date formats and return 'YYYY-MM-DD' strings."""
+    return pd.to_datetime(series, format="mixed", dayfirst=True, errors="coerce").dt.strftime("%Y-%m-%d")
 
-# 4. Fix category spellings ---------------------------------------------------
-# TODO: 'Electronic' -> 'Electronics', trailing spaces -> none, etc.
+# ==========================================================================
+# 1. CUSTOMERS
+# ==========================================================================
+cust = pd.read_csv(f"{RAW}/customers_raw.csv")
+cust["name"] = cust["name"].str.strip().str.title()
+cust["phone"] = cust["phone"].apply(fix_phone)
+# TODO: fix county spellings -> Title case, map 'Mombassa'->'Mombasa'
+# TODO: standardise gender -> 'M'/'F' (map 'Male'->'M','female'->'F', etc.)
+cust["signup_date"] = parse_date(cust["signup_date"])
+# TODO: age has impossible values (0, 150, 200). Set ages outside 10..100 to NaN.
+cust.to_csv(f"{OUT}/customers_clean.csv", index=False)
+print("customers ->", cust.shape)
 
-# 5. Standardise payment_method ----------------------------------------------
-# TODO: 'mpesa'/'Mpesa' -> 'M-Pesa', 'card' -> 'Card', 'cash' -> 'Cash'
+# ==========================================================================
+# 2. PRODUCTS  (already clean — just copy through, maybe verify types)
+# ==========================================================================
+prod = pd.read_csv(f"{RAW}/products.csv")
+prod.to_csv(f"{OUT}/products_clean.csv", index=False)
+print("products  ->", prod.shape)
 
-# 6. Convert unit_price text -> number ---------------------------------------
-# Values look like '3500', 'KES 3500', or '3,500'. Remove letters/commas/spaces.
-# TODO:
-# df["unit_price"] = (
-#     df["unit_price"].astype(str)
-#       .str.replace("KES", "", case=False)
-#       .str.replace(",", "")
-#       .str.strip()
-# )
-# df["unit_price"] = pd.to_numeric(df["unit_price"])
+# ==========================================================================
+# 3. ORDERS  (the big messy one)
+# ==========================================================================
+orders = pd.read_csv(f"{RAW}/orders_raw.csv")
+orders["unit_price"] = to_number(orders["unit_price"])
+orders["order_date"] = parse_date(orders["order_date"])
+# TODO: standardise payment_method ('mpesa'/'Mpesa'->'M-Pesa', 'card'->'Card', ...)
+# TODO: standardise channel ('web'->'Web','app'->'App','store'->'Store')
+# TODO: drop exact duplicate rows  -> orders = orders.drop_duplicates()
+# NOTE: leave blank ratings as missing (NaN) — do NOT fill with 0.
+# NOTE: extreme quantities (e.g. 100) are handled in the STATS stage (outliers),
+#       so keep them here but be aware of them.
+orders.to_csv(f"{OUT}/orders_clean.csv", index=False)
+print("orders    ->", orders.shape)
 
-# 7. Parse the date (3 formats) ----------------------------------------------
-# pandas is smart: pd.to_datetime can usually handle mixed formats.
-# TODO:
-# df["order_date"] = pd.to_datetime(df["order_date"], format="mixed", dayfirst=True)
-# df["order_date"] = df["order_date"].dt.strftime("%Y-%m-%d")
+# ==========================================================================
+# 4. RETURNS
+# ==========================================================================
+returns = pd.read_csv(f"{RAW}/returns.csv")
+returns["return_date"] = parse_date(returns["return_date"])
+# TODO: standardise 'reason' capitalisation (Title case)
+returns.to_csv(f"{OUT}/returns_clean.csv", index=False)
+print("returns   ->", returns.shape)
 
-# 8. Normalise phone numbers to +2547XXXXXXXX --------------------------------
-# Formats seen: 07XXXXXXXX, +2547XXXXXXXX, 2547XXXXXXXX, 7XXXXXXXX
-# TODO: write a small function that returns one consistent format.
-# def fix_phone(p):
-#     digits = "".join(ch for ch in str(p) if ch.isdigit())
-#     if digits.startswith("0"):    digits = "254" + digits[1:]
-#     elif digits.startswith("7"):  digits = "254" + digits
-#     return "+" + digits
-# df["phone"] = df["phone"].apply(fix_phone)
+# ==========================================================================
+# 5. AB_TEST
+# ==========================================================================
+ab = pd.read_csv(f"{RAW}/ab_test.csv")
+ab["exposed_date"] = parse_date(ab["exposed_date"])
+ab.to_csv(f"{OUT}/ab_test_clean.csv", index=False)
+print("ab_test   ->", ab.shape)
 
-# 9. Remove duplicate rows ----------------------------------------------------
-# TODO: df = df.drop_duplicates()
-
-# 10. Handle missing values ---------------------------------------------------
-# Decide and EXPLAIN in a comment: do you drop rows with blank county? Leave
-# blank ratings as missing? (Average rating should ignore missing, not treat as 0.)
-# TODO
-
-# 11. Save -------------------------------------------------------------------
-df.to_csv(OUT, index=False)
-print("\nSaved clean data to:", OUT)
-print("Final shape:", df.shape)
+print("\nAll cleaned files written to", OUT)

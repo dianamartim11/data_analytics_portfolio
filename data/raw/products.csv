@@ -1,0 +1,21 @@
+product_id,product_name,category,cost_price,list_price
+P01,Wireless Earbuds,Electronics,2100,3500
+P02,Phone Charger,Electronics,350,800
+P03,Bluetooth Speaker,Electronics,1500,2500
+P04,Power Bank,Electronics,1100,1800
+P05,Smart Watch,Electronics,3200,5200
+P06,USB Cable,Electronics,120,300
+P07,Cotton T-Shirt,Clothing,450,950
+P08,Denim Jeans,Clothing,1300,2200
+P09,Sports Shoes,Clothing,2600,4200
+P10,Leather Belt,Clothing,300,700
+P11,Hoodie,Clothing,1100,1900
+P12,Notebook Set,Stationery,150,350
+P13,Ballpoint Pens,Stationery,80,200
+P14,Backpack,Stationery,900,1600
+P15,Calculator,Stationery,400,750
+P16,Frying Pan,Home,650,1200
+P17,Bedsheet Set,Home,1500,2800
+P18,Water Bottle,Home,250,600
+P19,Table Lamp,Home,800,1500
+P20,Wall Clock,Home,500,1100
