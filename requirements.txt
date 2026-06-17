@@ -1,0 +1,9 @@
+# Python packages for this portfolio project.
+# Install with:  pip install -r requirements.txt
+pandas>=2.2
+numpy>=1.26
+matplotlib>=3.8
+seaborn>=0.13
+scikit-learn>=1.4
+scipy>=1.12
+openpyxl>=3.1      # lets pandas read/write Excel .xlsx files

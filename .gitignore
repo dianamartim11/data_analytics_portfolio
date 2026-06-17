@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Excel/Power BI temp lock files
+~$*.xlsx
+*.tmp
+
+# Local SQLite database file (you regenerate it from schema.sql + the CSV)
+*.db
+*.sqlite
+
+# NOTE: we DO commit data/processed/online_orders_clean.csv on purpose,
+# because Power BI and the report depend on it. Keep it tracked.
